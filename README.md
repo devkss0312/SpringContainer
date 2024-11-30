@@ -1,58 +1,46 @@
 # **Spring 스타일의 경량 DI 프레임워크**
 
-이 프로젝트는 **Spring의 Component Scan과 의존성 주입(`@Autowired`)을 모방한 경량 DI(Dependency Injection) 프레임워크입니다. 순수 Java로 구현된 이 프레임워크는 학습 목적으로 설계되었으며, Spring의 핵심 개념을 간단히 재현합니다.
+이 프로젝트는 Spring의 Component Scan과 의존성 주입을 모방한 경량 DI 프레임워크입니다.
 
+*자체 서버 프레임워크 문제를 해결하기 위해 Spring Container 동작을 직접 구현한 프로젝트*
 
-## **주요 기능**
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/eb6b31b9-7f27-4ac0-9483-f8f68c55eaad/6082cfe0-021c-4b41-81f4-0108c29f0935/image.png)
 
-- **컴포넌트 스캔**: 특정 패키지의 `@Component`로 정의된 클래스를 자동으로 스캔하여 빈으로 등록.
-- **의존성 주입**: `@Autowired`를 사용하여 필드에 의존성을 주입.
-- **경량 설계**: Spring의 복잡한 설정 없이 DI 및 빈 관리 기능 제공.
-- **확장 가능성**: 라이프사이클 관리, 스코프, 사용자 정의 어노테이션 등의 기능 추가 가능.
+### **1. Component Scan을 통한 빈 등록 및 싱글톤 관리**
 
+- **Component Scan** 방식을 사용하여 단순한 의존성 주입 요구사항을 충족
+- `@Component`와 `@Autowired` 어노테이션을 직접 구현하여 빈 등록 및 의존성 주입 처리
+- **생성자 기반 의존성 주입**을 사용하여 의존 객체를 명확하고 안전하게 관리
+- **싱글톤 패턴**을 적용하여 애플리케이션 전역에서 동일한 빈 인스턴스를 재사용하도록 구현
 
-## **동작 원리**
-### 1. 컴포넌트 스캔
-- 기본 패키지 설정: ApplicationContext는 지정된 패키지 경로에서 @Component로 어노테이션된 모든 클래스를 탐색합니다.
-- 클래스 탐색 및 등록: 지정된 경로의 클래스 파일을 스캔합니다.
-- @Component 어노테이션이 붙어있는 클래스를 식별합니다.
-- 해당 클래스를 인스턴스화하여 빈으로 등록합니다.
-- 빈 관리: 생성된 객체는 singletonObjects라는 맵에 저장되어 관리되며, 빈 이름은 클래스의 단순 이름을 사용합니다.
-### 2. 의존성 주입
-- 빈 순회: DependencyInjector는 ApplicationContext에서 관리하는 모든 빈을 순회합니다.
-- 필드 탐색:
-각 빈에서 @Autowired 어노테이션이 붙은 필드를 찾습니다.
-- 해당 필드의 타입에 맞는 빈을 ApplicationContext에서 검색합니다.
-### 3. 주입 수행:
-- 리플렉션을 사용하여 필드에 의존성을 주입합니다.
-- 이 과정은 접근 제어자를 무시하고(private 필드 등) 주입을 가능하게 합니다.
-- 의존성 해결: 모든 빈의 의존성이 해결되면 애플리케이션 실행 준비가 완료됩니다.
-### 4. 실행
-- 빈 가져오기: ApplicationContext에서 필요한 빈을 가져옵니다.
-- 로직 실행: 의존성이 주입된 객체의 메서드를 호출하여 애플리케이션의 주요 로직을 실행합니다.
-- 예시 흐름:
-  - ServiceA가 ServiceB를 의존성으로 주입받습니다.
-  - ServiceA의 execute() 메서드를 호출하면, 내부적으로 ServiceB의 execute() 메서드가 호출됩니다.
-- 이를 통해 빈 간의 의존성이 실제로 동작함을 확인할 수 있습니다.
+### **2. DFS 기반 의존 객체 주입을 통한 초기화 순서 보장**
 
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/eb6b31b9-7f27-4ac0-9483-f8f68c55eaad/90ade4f1-fe83-47d7-9d0c-f496f4f323dd/image.png)
 
-## **설치 및 빌드**
-- 필요 조건
-  - Java 17 이상
-  - Gradle 8.0 이상
-- 빌드
-```bash
-gradle clean build
-```
-- 애플리케이션 실행
-```bash
-gradle run
-```
+- **아직 생성되지 않은 객체가 주입되는 문제를 방지**하기 위해 빈 등록 및 생성 순서를 보장
+- 빈 등록 과정에서, **필요한 의존 객체가 먼저 생성되었는지 확인**:
+  - 필요한 의존 객체가 아직 생성되지 않은 경우, 해당 객체를 우선적으로 생성 및 등록
+  - 필요한 의존 객체가 이미 생성된 경우, 이를 사용하여 현재 빈을 등록
+- 모든 빈을 **DFS** 기반으로 탐색하며, 의존 객체를 해결한 뒤 순차적으로 컨테이너에 등록
 
-## **확장 가능성**
+### 3. 자체 서버 프레임워크와 Spring Container를 연계한 서비스 제공
 
-- 빈 스코프: 싱글톤 외에 프로토타입, 요청 스코프 등 다양한 스코프 지원.
-- 라이프사이클 관리: @PostConstruct 및 @PreDestroy와 같은 라이프사이클 콜백 지원.
-- 순환 의존성 감지: 두 개 이상의 빈이 서로를 의존할 때 발생하는 문제를 탐지하고 해결.
-- 사용자 정의 어노테이션: @Service, @Repository 등 역할 기반 어노테이션 추가로 세분화된 빈 관리.
-- 예외 처리 개선: 빈 생성 및 의존성 주입 과정에서 발생할 수 있는 다양한 예외 상황에 대한 상세한 처리.
+- 자체 서버 프레임워크에서 클라이언트 요청을 Controller와 연동하는 구조는 유지
+- 서비스 적용 전
+
+  ![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/eb6b31b9-7f27-4ac0-9483-f8f68c55eaad/728846a2-a381-4b76-a79e-4dc2622dd135/image.png)
+
+  - Controller에서 직접 Repository를 생성하여 요청마다 새로운 객체를 생성 → **메모리 낭비**
+  - 높은 결합도로 인해 유지보수가 어려움
+- 서비스 적용 후
+
+  ![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/eb6b31b9-7f27-4ac0-9483-f8f68c55eaad/ff47b279-2f04-46ae-bd6f-20795f36b49f/image.png)
+
+  - Controller가 Spring Container에서 빈을 호출해 재사용 → **메모리 사용량 80% 이상 절감**
+  - 빈을 통해 의존 객체를 주입받아 **결합도가 낮아지고 유지보수성이 개선**됨
+
+### **4. 구현한 Spring Container와 JUnit을 연동한 테스트 코드 작성**
+
+- **`@BeforeAll` 어노테이션**을 사용하여 테스트 실행 전에 단 **한 번 Spring Container를 초기화**하여 설정
+- 초기화된 Spring Container에서 **Bean을 가져와 각 테스트에서 재사용**하도록 설계
+- 직접 구현한 Spring Container의 **의존성 주입**, **Singleton 동작**, **빈 등록 및 호출**이 올바르게 동작하는지 검증하는 테스트 코드 작성

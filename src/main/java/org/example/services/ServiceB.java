@@ -1,10 +1,18 @@
 package org.example.services;
 
+import org.example.annotations.Autowired;
 import org.example.annotations.Component;
 
 @Component
 public class ServiceB {
-    public void execute() {
-        System.out.println("ServiceB executed");
+    private final ServiceC serviceC;
+
+    @Autowired
+    public ServiceB(ServiceC serviceC) {
+        this.serviceC = serviceC;
+    }
+
+    public String execute() {
+        return "ServiceB executed via " + serviceC.execute();
     }
 }

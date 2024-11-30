@@ -5,11 +5,16 @@ import org.example.annotations.Component;
 
 @Component
 public class ServiceA {
-    @Autowired
-    private ServiceB serviceB;
+    private final ServiceB serviceB;
+    private final ServiceC serviceC;
 
-    public void execute() {
-        System.out.println("ServiceA executed");
-        serviceB.execute();
+    @Autowired
+    public ServiceA(ServiceB serviceB, ServiceC serviceC) {
+        this.serviceB = serviceB;
+        this.serviceC = serviceC;
+    }
+
+    public String execute() {
+        return "ServiceA executed with " + serviceB.execute() + " and " + serviceC.execute();
     }
 }

@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'jacoco'
 }
 
 group = 'org.example'
@@ -22,3 +23,60 @@ java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
 }
+
+jacoco {
+    toolVersion = "0.8.8" // 최신 JaCoCo 버전
+}
+
+tasks.test {
+    useJUnitPlatform() // JUnit5 사용
+    finalizedBy jacocoTestReport // 테스트 후 JaCoCo 리포트 생성
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+    classDirectories.setFrom(
+            fileTree(dir: "${buildDir}/classes/java/main", exclude: [
+                    '**/Main*',            // Main 클래스 제외
+                    '**/services/ServiceA*', // ServiceA 클래스 제외
+                    '**/services/ServiceB*', // ServiceB 클래스 제외
+                    '**/services/ServiceC*'  // ServiceC 클래스 제외
+            ])
+    )
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    violationRules {
+        rule {
+            element = 'BUNDLE'
+
+            // 라인 커버리지 80% 이상
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.8
+            }
+
+            // 클래스 커버리지 100% 이상
+            limit {
+                counter = 'CLASS'
+                value = 'COVEREDRATIO'
+                minimum = 1.0
+            }
+
+            // 메서드 커버리지 100% 이상
+            limit {
+                counter = 'METHOD'
+                value = 'COVEREDRATIO'
+                minimum = 1.0
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
