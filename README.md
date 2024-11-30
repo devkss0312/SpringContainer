@@ -1,7 +1,5 @@
 # **Spring 스타일의 경량 DI 프레임워크**
 
-이 프로젝트는 Spring의 Component Scan과 의존성 주입을 모방한 경량 DI 프레임워크입니다.
-
 *자체 서버 프레임워크 문제를 해결하기 위해 Spring Container 동작을 직접 구현한 프로젝트*
 
 ![img_2.png](img_2.png)
