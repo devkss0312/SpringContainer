@@ -49,7 +49,7 @@ gradle clean build
 gradle run
 ```
 
-## **확장 가능성
+## **확장 가능성**
 
 - 빈 스코프: 싱글톤 외에 프로토타입, 요청 스코프 등 다양한 스코프 지원.
 - 라이프사이클 관리: @PostConstruct 및 @PreDestroy와 같은 라이프사이클 콜백 지원.
